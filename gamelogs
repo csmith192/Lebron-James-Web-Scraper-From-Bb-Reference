@@ -1,0 +1,30 @@
+import requests
+from bs4 import BeautifulSoup as bs
+import pandas as pd
+
+df_lebron=[]
+for i in range(2004,2023):
+    urll = f"https://www.basketball-reference.com/players/j/jamesle01/gamelog/{i}"
+    r = requests.get(urll)
+    soup = bs(r.content,features="html.parser")
+    #Grab Table
+    table = soup.find("div",attrs={"id":"all_pgl_basic"})
+    #select columns
+    columns = table.find("thead").find_all("th")
+    column_names = [name.string for name in columns]
+    column_namesdrop = column_names[1:]
+    #select tbodyrows
+    table_rows = table.find("tbody").find_all("tr")
+    l = []
+    for tr in table_rows:
+        td = tr.find_all("td",attrs=["right","left","center","right","center iz","right iz"])
+        row = [str(tr.get_text()).strip() for tr in td]
+        l.append(row)
+    #Putting it all together
+    pd.set_option('display.max_rows', None)
+    lebron_data = pd.DataFrame(l,columns=column_namesdrop)
+    df_lebron.append(pd.DataFrame(lebron_data).drop(0, axis=0))
+
+data = pd.concat(df_lebron)
+print(data)
+#data.to_csv('LebronStats.csv')
